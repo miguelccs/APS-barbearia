@@ -1,0 +1,90 @@
+/* Custom CSS for Barbearia Premium */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Navbar */
+.custom-navbar {
+    background-color: #1a1a1a;
+}
+.custom-navbar .nav-link {
+    font-size: 0.9rem;
+    margin: 0 10px;
+}
+.custom-active {
+    color: #fff !important;
+    border: 1px solid #ff9800;
+    border-radius: 5px;
+    padding: 4px 15px !important;
+}
+
+/* Buttons */
+.custom-btn-nav {
+    background-color: #ff9800;
+    color: #111;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 6px 20px;
+    border-radius: 5px;
+}
+.custom-btn-nav:hover {
+    background-color: #e68a00;
+    color: #111;
+}
+
+.custom-btn-hero {
+    background-color: #ff9800;
+    color: #111;
+    font-weight: 600;
+    padding: 10px 25px;
+    border-radius: 4px;
+}
+.custom-btn-hero:hover {
+    background-color: #e68a00;
+    color: #111;
+}
+
+.custom-btn-dark {
+    background-color: #1a1a1a;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+.custom-btn-dark:hover {
+    background-color: #000;
+    color: #fff;
+}
+
+/* Hero Section */
+.hero-section {
+    background-color: #222222;
+    padding: 100px 0;
+}
+
+/* Feature Icons */
+.feature-icon-wrapper {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #fff9e6; /* Light yellow */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: #ff9800;
+}
+
+/* Old styling kept for other pages */
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+}
