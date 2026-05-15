@@ -1,12 +1,9 @@
-// Variables for Calendar
 let currentDate = new Date();
-// Ensure we don't start in the past if current month is earlier than today, but for a simple calendar we'll just use current system date
 let currentMonth = currentDate.getMonth();
 let currentYear = currentDate.getFullYear();
 let selectedDate = null;
 let selectedTime = null;
 
-// Gerar horários das 09:00 às 21:00 com intervalo de 40 minutos
 const availableTimes = [];
 let currentHour = 9;
 let currentMinute = 0;
@@ -24,7 +21,6 @@ while (currentHour < 21 || (currentHour === 21 && currentMinute === 0)) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Only run calendar logic if we are on the agendamento page
     if (document.getElementById('calendar-days')) {
         renderCalendar(currentMonth, currentYear);
 
@@ -46,7 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
             renderCalendar(currentMonth, currentYear);
         });
 
-        // Form Submission
         const form = document.getElementById('agendamento-form');
         if (form) {
             form.addEventListener('submit', function(e) {
@@ -83,19 +78,18 @@ function renderCalendar(month, year) {
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     
+    // Meses do ano HARDCODED, tentamos evitar usar features hardcoded, mas aqui não tivemos muitas alternativas práticas
     const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
     monthYearDisplay.textContent = `${monthNames[month]} ${year}`;
     
     const today = new Date();
     today.setHours(0,0,0,0);
     
-    // Fill empty spaces before first day
     for (let i = 0; i < firstDay; i++) {
         const emptyDiv = document.createElement('div');
         calendarDays.appendChild(emptyDiv);
     }
     
-    // Fill days
     for (let i = 1; i <= daysInMonth; i++) {
         const dayDiv = document.createElement('div');
         dayDiv.textContent = i;
@@ -104,13 +98,11 @@ function renderCalendar(month, year) {
         const dateOfThisDiv = new Date(year, month, i);
         dateOfThisDiv.setHours(0,0,0,0);
         
-        // Disable past dates
         if (dateOfThisDiv < today) {
             dayDiv.classList.add('disabled');
         } else {
             dayDiv.addEventListener('click', () => selectDate(year, month, i));
             
-            // Highlight if it's the currently selected date
             if (selectedDate && 
                 selectedDate.getDate() === i && 
                 selectedDate.getMonth() === month && 
@@ -125,12 +117,10 @@ function renderCalendar(month, year) {
 
 function selectDate(year, month, day) {
     selectedDate = new Date(year, month, day);
-    selectedTime = null; // reset time when changing date
+    selectedTime = null;
     
-    // Re-render calendar to update selected visual state
     renderCalendar(currentMonth, currentYear);
     
-    // Show time slots
     document.getElementById('no-date-selected').classList.add('d-none');
     document.getElementById('time-slots-container').classList.remove('d-none');
     
@@ -160,9 +150,7 @@ function renderTimeSlots() {
         }
         
         slot.addEventListener('click', () => {
-            // Remove selected class from all
             document.querySelectorAll('.time-slot').forEach(el => el.classList.remove('selected'));
-            // Add to clicked
             slot.classList.add('selected');
             selectedTime = time;
             updateSelectionDisplay();

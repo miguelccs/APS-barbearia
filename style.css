@@ -1,4 +1,3 @@
-/* Custom CSS for Barbearia Premium */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 body {
@@ -8,7 +7,6 @@ body {
     min-height: 100vh;
 }
 
-/* Navbar */
 .custom-navbar {
     background-color: #1a1a1a;
 }
@@ -59,18 +57,16 @@ body {
     color: #fff;
 }
 
-/* Hero Section */
 .hero-section {
     background-color: #222222;
     padding: 100px 0;
 }
 
-/* Feature Icons */
 .feature-icon-wrapper {
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background-color: #fff9e6; /* Light yellow */
+    background-color: #fff9e6;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -78,7 +74,6 @@ body {
     color: #ff9800;
 }
 
-/* Old styling kept for other pages */
 .card {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     border: none;
@@ -89,7 +84,6 @@ body {
     box-shadow: 0 8px 15px rgba(0,0,0,0.2);
 }
 
-/* Calendar Styles */
 .calendar-header {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -127,7 +121,6 @@ body {
     font-weight: bold;
 }
 
-/* Time Slots */
 .time-slots-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -152,7 +145,6 @@ body {
     border-color: #ff9800;
 }
 
-/* Dark Form Controls */
 .form-control-dark, .form-control-dark:focus {
     background-color: #2a2a2a;
     border: 1px solid #444;
