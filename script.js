@@ -31,25 +31,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Auto-preenchimento caso haja sessão ativa em storage.js
         if (typeof Auth !== 'undefined') {
-            const usuarioLogado = Auth.getUsuarioLogado();
-            if (usuarioLogado) {
-                const nomeInput = document.getElementById('nome');
-                const telInput = document.getElementById('telefone');
-                if (nomeInput && !nomeInput.value) nomeInput.value = usuarioLogado.nome;
-                if (telInput && !telInput.value) telInput.value = usuarioLogado.telefone;
+            Auth.getUsuarioLogado().then(usuarioLogado => {
+                if (usuarioLogado) {
+                    const nomeInput = document.getElementById('nome');
+                    const telInput = document.getElementById('telefone');
+                    if (nomeInput && !nomeInput.value) nomeInput.value = usuarioLogado.nome;
+                    if (telInput && !telInput.value) telInput.value = usuarioLogado.telefone;
 
-                const formEl = document.getElementById('agendamento-form');
-                if (formEl && !document.getElementById('badge-user-logged')) {
-                    const badge = document.createElement('div');
-                    badge.id = 'badge-user-logged';
-                    badge.className = 'alert alert-dark border-secondary py-2 px-3 mb-3 small d-flex justify-content-between align-items-center';
-                    badge.innerHTML = `
-                        <span><i class="fa-solid fa-circle-check text-warning me-2"></i>Logado como <strong>${usuarioLogado.nome}</strong></span>
-                        <a href="login.html" class="text-warning text-decoration-none fw-bold">Ver Meus Agendamentos</a>
-                    `;
-                    formEl.prepend(badge);
+                    const formEl = document.getElementById('agendamento-form');
+                    if (formEl && !document.getElementById('badge-user-logged')) {
+                        const badge = document.createElement('div');
+                        badge.id = 'badge-user-logged';
+                        badge.className = 'alert alert-dark border-secondary py-2 px-3 mb-3 small d-flex justify-content-between align-items-center';
+                        badge.innerHTML = `
+                            <span><i class="fa-solid fa-circle-check text-warning me-2"></i>Logado como <strong>${usuarioLogado.nome}</strong></span>
+                            <a href="login.html" class="text-warning text-decoration-none fw-bold">Ver Meus Agendamentos</a>
+                        `;
+                        formEl.prepend(badge);
+                    }
                 }
-            }
+            });
         }
 
         document.getElementById('prev-month').addEventListener('click', () => {
@@ -72,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const form = document.getElementById('agendamento-form');
         if (form) {
-            form.addEventListener('submit', function(e) {
+            form.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 if (!selectedDate || !selectedTime) {
                     alert('Por favor, selecione uma data e um horário no calendário.');
@@ -86,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Persistência via módulo de storage (se disponível)
                 if (typeof Agendamentos !== 'undefined') {
-                    Agendamentos.salvar({
+                    await Agendamentos.salvar({
                         nome,
                         telefone,
                         servico,
@@ -98,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (feedbackContainer) {
                         feedbackContainer.innerHTML = `
                             <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
-                                <h5 class="alert-heading fw-bold"><i class="fa-solid fa-circle-check me-2"></i>Agendamento Confirmado e Salvo!</h5>
+                                <h5 class="alert-heading fw-bold"><i class="fa-solid fa-circle-check me-2"></i>Agendamento Confirmado e Criptografado!</h5>
                                 <p class="mb-1"><strong>Cliente:</strong> ${nome}</p>
                                 <p class="mb-1"><strong>Telefone:</strong> ${telefone}</p>
                                 <p class="mb-1"><strong>Serviço:</strong> ${servico}</p>
@@ -112,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         `;
                         feedbackContainer.scrollIntoView({ behavior: 'smooth' });
                     } else {
-                        alert(`Agendamento Confirmado!\n\nNome: ${nome}\nTelefone: ${telefone}\nServiço: ${servico}\nData: ${dataFormatada}\nHorário: ${selectedTime}`);
+                        alert(`Agendamento Confirmado e Salvo com Sucesso!\n\nNome: ${nome}\nTelefone: ${telefone}\nServiço: ${servico}\nData: ${dataFormatada}\nHorário: ${selectedTime}`);
                     }
                 } else {
                     alert(`Agendamento Confirmado!\n\nNome: ${nome}\nServiço: ${servico}\nData: ${dataFormatada}\nHorário: ${selectedTime}`);
@@ -129,13 +130,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Mantém dados do usuário logado no form após reset
                 if (typeof Auth !== 'undefined') {
-                    const usuarioLogado = Auth.getUsuarioLogado();
-                    if (usuarioLogado) {
-                        const nomeInput = document.getElementById('nome');
-                        const telInput = document.getElementById('telefone');
-                        if (nomeInput) nomeInput.value = usuarioLogado.nome;
-                        if (telInput) telInput.value = usuarioLogado.telefone;
-                    }
+                    Auth.getUsuarioLogado().then(usuarioLogado => {
+                        if (usuarioLogado) {
+                            const nomeInput = document.getElementById('nome');
+                            const telInput = document.getElementById('telefone');
+                            if (nomeInput) nomeInput.value = usuarioLogado.nome;
+                            if (telInput) telInput.value = usuarioLogado.telefone;
+                        }
+                    });
                 }
             });
         }

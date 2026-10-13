@@ -1,21 +1,37 @@
 // ==========================================
 // MÓDULO EXCLUSIVO: STORAGE & AUTENTICAÇÃO
-// Gerencia persistência em localStorage e lógica de usuários
+// Gerencia persistência cifrada (AES-GCM) no localStorage e lógica de usuários
 // ==========================================
 
 const Storage = {
-    get(key, defaultValue = null) {
+    async get(key, defaultValue = null) {
         try {
             const item = localStorage.getItem(key);
-            return item ? JSON.parse(item) : defaultValue;
+            if (!item) return defaultValue;
+
+            // Se o módulo CriptoStorage estiver presente, decifra os dados
+            if (typeof CriptoStorage !== 'undefined') {
+                const decifrado = await CriptoStorage.decifrar(item);
+                if (decifrado !== null) return decifrado;
+            }
+
+            // Fallback para dados em texto puro (legados)
+            return JSON.parse(item);
         } catch (err) {
             console.error(`[Storage] Falha ao ler "${key}":`, err);
             return defaultValue;
         }
     },
 
-    set(key, value) {
+    async set(key, value) {
         try {
+            // Se o módulo CriptoStorage estiver presente, salva cifrado com AES-GCM
+            if (typeof CriptoStorage !== 'undefined') {
+                const cifrado = await CriptoStorage.cifrar(value);
+                localStorage.setItem(key, cifrado);
+                return true;
+            }
+
             localStorage.setItem(key, JSON.stringify(value));
             return true;
         } catch (err) {
@@ -72,11 +88,11 @@ const Auth = {
     STORAGE_USERS: 'barbearia_usuarios',
     STORAGE_SESSION: 'barbearia_sessao',
 
-    getUsuarioLogado() {
-        return Storage.get(this.STORAGE_SESSION, null);
+    async getUsuarioLogado() {
+        return await Storage.get(this.STORAGE_SESSION, null);
     },
 
-    registrar(nome, telefone, senha) {
+    async registrar(nome, telefone, senha) {
         const telLimpo = normalizarTelefone(telefone);
 
         if (!nome || !nome.trim()) {
@@ -89,7 +105,7 @@ const Auth = {
             return { ok: false, mensagem: 'A senha deve ter no mínimo 4 dígitos.' };
         }
 
-        const usuarios = Storage.get(this.STORAGE_USERS, []);
+        const usuarios = await Storage.get(this.STORAGE_USERS, []);
         const jaExiste = usuarios.some(u => normalizarTelefone(u.telefone) === telLimpo);
 
         if (jaExiste) {
@@ -106,7 +122,7 @@ const Auth = {
         };
 
         usuarios.push(novoUsuario);
-        Storage.set(this.STORAGE_USERS, usuarios);
+        await Storage.set(this.STORAGE_USERS, usuarios);
 
         const sessao = {
             id: novoUsuario.id,
@@ -114,12 +130,12 @@ const Auth = {
             telefone: novoUsuario.telefone,
             telefoneRaw: novoUsuario.telefoneRaw
         };
-        Storage.set(this.STORAGE_SESSION, sessao);
+        await Storage.set(this.STORAGE_SESSION, sessao);
 
         return { ok: true, usuario: sessao };
     },
 
-    login(telefone, senha) {
+    async login(telefone, senha) {
         const telLimpo = normalizarTelefone(telefone);
 
         if (!telLimpo) {
@@ -129,7 +145,7 @@ const Auth = {
             return { ok: false, mensagem: 'Por favor, informe sua senha.' };
         }
 
-        const usuarios = Storage.get(this.STORAGE_USERS, []);
+        const usuarios = await Storage.get(this.STORAGE_USERS, []);
         const usuario = usuarios.find(u => normalizarTelefone(u.telefone) === telLimpo && u.senha === senha);
 
         if (!usuario) {
@@ -142,7 +158,7 @@ const Auth = {
             telefone: usuario.telefone,
             telefoneRaw: usuario.telefoneRaw
         };
-        Storage.set(this.STORAGE_SESSION, sessao);
+        await Storage.set(this.STORAGE_SESSION, sessao);
 
         return { ok: true, usuario: sessao };
     },
@@ -158,19 +174,19 @@ const Auth = {
 const Agendamentos = {
     STORAGE_KEY: 'barbearia_agendamentos',
 
-    listarTodos() {
-        return Storage.get(this.STORAGE_KEY, []);
+    async listarTodos() {
+        return await Storage.get(this.STORAGE_KEY, []);
     },
 
-    listarPorTelefone(telefone) {
+    async listarPorTelefone(telefone) {
         const telLimpo = normalizarTelefone(telefone);
         if (!telLimpo) return [];
-        const lista = this.listarTodos();
+        const lista = await this.listarTodos();
         return lista.filter(item => normalizarTelefone(item.telefone) === telLimpo);
     },
 
-    salvar(dados) {
-        const todos = this.listarTodos();
+    async salvar(dados) {
+        const todos = await this.listarTodos();
         const novo = {
             id: 'ag_' + Date.now() + Math.random().toString(36).substring(2, 6),
             nome: dados.nome.trim(),
@@ -183,14 +199,14 @@ const Agendamentos = {
         };
 
         todos.push(novo);
-        Storage.set(this.STORAGE_KEY, todos);
+        await Storage.set(this.STORAGE_KEY, todos);
         return novo;
     },
 
-    cancelar(id) {
-        const todos = this.listarTodos();
+    async cancelar(id) {
+        const todos = await this.listarTodos();
         const filtrados = todos.filter(item => item.id !== id);
-        Storage.set(this.STORAGE_KEY, filtrados);
+        await Storage.set(this.STORAGE_KEY, filtrados);
         return true;
     }
 };
@@ -198,8 +214,8 @@ const Agendamentos = {
 // ==========================================
 // GERENCIADOR DE UI DA ÁREA DE LOGIN E NAVBAR
 // ==========================================
-function atualizarNavbar() {
-    const usuario = Auth.getUsuarioLogado();
+async function atualizarNavbar() {
+    const usuario = await Auth.getUsuarioLogado();
     const linkConta = document.querySelector('.nav-link-conta');
     if (linkConta && usuario) {
         const primeiroNome = usuario.nome.split(' ')[0];
@@ -218,13 +234,13 @@ function inicializarPaginaLogin() {
 
     const formLogin = document.getElementById('form-login');
     if (formLogin) {
-        formLogin.addEventListener('submit', (e) => {
+        formLogin.addEventListener('submit', async (e) => {
             e.preventDefault();
             const tel = document.getElementById('login-telefone').value;
             const pass = document.getElementById('login-senha').value;
             const alertEl = document.getElementById('login-alert');
 
-            const res = Auth.login(tel, pass);
+            const res = await Auth.login(tel, pass);
             if (!res.ok) {
                 if (alertEl) {
                     alertEl.textContent = res.mensagem;
@@ -237,21 +253,21 @@ function inicializarPaginaLogin() {
 
             if (alertEl) alertEl.classList.add('d-none');
             formLogin.reset();
-            renderizarEstadoAuth();
-            atualizarNavbar();
+            await renderizarEstadoAuth();
+            await atualizarNavbar();
         });
     }
 
     const formRegistro = document.getElementById('form-registro');
     if (formRegistro) {
-        formRegistro.addEventListener('submit', (e) => {
+        formRegistro.addEventListener('submit', async (e) => {
             e.preventDefault();
             const nome = document.getElementById('reg-nome').value;
             const tel = document.getElementById('reg-telefone').value;
             const pass = document.getElementById('reg-senha').value;
             const alertEl = document.getElementById('reg-alert');
 
-            const res = Auth.registrar(nome, tel, pass);
+            const res = await Auth.registrar(nome, tel, pass);
             if (!res.ok) {
                 if (alertEl) {
                     alertEl.textContent = res.mensagem;
@@ -264,18 +280,18 @@ function inicializarPaginaLogin() {
 
             if (alertEl) alertEl.classList.add('d-none');
             formRegistro.reset();
-            renderizarEstadoAuth();
-            atualizarNavbar();
+            await renderizarEstadoAuth();
+            await atualizarNavbar();
         });
     }
 }
 
-function renderizarEstadoAuth() {
+async function renderizarEstadoAuth() {
     const guestView = document.getElementById('auth-guest-view');
     const loggedView = document.getElementById('auth-logged-view');
     if (!guestView || !loggedView) return;
 
-    const usuario = Auth.getUsuarioLogado();
+    const usuario = await Auth.getUsuarioLogado();
 
     if (usuario) {
         guestView.classList.add('d-none');
@@ -288,28 +304,28 @@ function renderizarEstadoAuth() {
 
         const btnLogout = document.getElementById('btn-logout');
         if (btnLogout) {
-            btnLogout.onclick = () => {
+            btnLogout.onclick = async () => {
                 if (confirm('Deseja realmente sair da sua conta?')) {
                     Auth.logout();
-                    renderizarEstadoAuth();
-                    atualizarNavbar();
+                    await renderizarEstadoAuth();
+                    await atualizarNavbar();
                 }
             };
         }
 
-        renderizarAgendamentosUsuario(usuario.telefoneRaw);
+        await renderizarAgendamentosUsuario(usuario.telefoneRaw);
     } else {
         loggedView.classList.add('d-none');
         guestView.classList.remove('d-none');
     }
 }
 
-function renderizarAgendamentosUsuario(telefoneRaw) {
+async function renderizarAgendamentosUsuario(telefoneRaw) {
     const container = document.getElementById('lista-agendamentos');
     const countBadge = document.getElementById('agendamentos-count');
     if (!container) return;
 
-    const lista = Agendamentos.listarPorTelefone(telefoneRaw);
+    const lista = await Agendamentos.listarPorTelefone(telefoneRaw);
 
     if (countBadge) {
         countBadge.textContent = `${lista.length} ${lista.length === 1 ? 'agendamento' : 'agendamentos'}`;
@@ -355,14 +371,14 @@ function renderizarAgendamentosUsuario(telefoneRaw) {
     container.innerHTML = `<div class="row g-3">${cardsHtml}</div>`;
 }
 
-window.cancelarAgendamento = function (id, telefoneRaw) {
+window.cancelarAgendamento = async function (id, telefoneRaw) {
     if (confirm('Tem certeza que deseja cancelar este agendamento?')) {
-        Agendamentos.cancelar(id);
-        renderizarAgendamentosUsuario(telefoneRaw);
+        await Agendamentos.cancelar(id);
+        await renderizarAgendamentosUsuario(telefoneRaw);
     }
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-    atualizarNavbar();
+document.addEventListener('DOMContentLoaded', async () => {
+    await atualizarNavbar();
     inicializarPaginaLogin();
 });

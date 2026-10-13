@@ -5,7 +5,6 @@
 // ========================================================
 
 const CriptoStorage = (function () {
-    // Chave padrão caso o chamador não forneça uma senha específica
     const CHAVE_PADRAO = "barbearia-premium-secret-key-2026";
 
     // 1. Converte ArrayBuffer para Base64 compacto
@@ -51,7 +50,7 @@ const CriptoStorage = (function () {
                 const enc = new TextEncoder();
                 const textoLimpo = typeof dado === 'string' ? dado : JSON.stringify(dado);
 
-                // IV único de 12 bytes para cada cifragem (garante que dados repetidos gerem cifras diferentes)
+                // IV único de 12 bytes por operação
                 const iv = crypto.getRandomValues(new Uint8Array(12));
                 const chave = await obterChave(segredo);
 
@@ -69,12 +68,22 @@ const CriptoStorage = (function () {
         },
 
         /**
-         * Descriptografa a string cifrada e devolve o dado original já convertido
+         * Descriptografa e converte de volta para objeto/string
+         * Possui fallback transparente para dados legados não criptografados
          */
         async decifrar(payloadCifrado, segredo = CHAVE_PADRAO) {
             try {
-                if (!payloadCifrado || typeof payloadCifrado !== 'string' || !payloadCifrado.includes('.')) {
+                if (!payloadCifrado || typeof payloadCifrado !== 'string') {
                     return null;
+                }
+
+                // Fallback para dado legado em texto puro (sem ponto separador de Base64)
+                if (!payloadCifrado.includes('.')) {
+                    try {
+                        return JSON.parse(payloadCifrado);
+                    } catch {
+                        return payloadCifrado;
+                    }
                 }
 
                 const [ivB64, dataB64] = payloadCifrado.split('.');
@@ -96,23 +105,22 @@ const CriptoStorage = (function () {
                     return textoOriginal;
                 }
             } catch (err) {
-                console.error("[CriptoStorage] Falha ao decifrar. Chave incorreta ou dado corrompido:", err);
-                return null;
+                // Fallback gracioso caso seja JSON não criptografado antigo
+                try {
+                    return JSON.parse(payloadCifrado);
+                } catch {
+                    console.error("[CriptoStorage] Falha ao decifrar dados:", err);
+                    return null;
+                }
             }
         },
 
-        /**
-         * Atalho: Criptografa e grava diretamente no localStorage
-         */
         async setItem(chave, valor, segredo = CHAVE_PADRAO) {
             const cifrado = await this.cifrar(valor, segredo);
             localStorage.setItem(chave, cifrado);
             return true;
         },
 
-        /**
-         * Atalho: Lê do localStorage e descriptografa automaticamente
-         */
         async getItem(chave, valorPadrao = null, segredo = CHAVE_PADRAO) {
             const item = localStorage.getItem(chave);
             if (!item) return valorPadrao;
@@ -122,7 +130,6 @@ const CriptoStorage = (function () {
     };
 })();
 
-// Expõe globalmente caso usado em módulos clássicos
 if (typeof window !== 'undefined') {
     window.CriptoStorage = CriptoStorage;
 }
