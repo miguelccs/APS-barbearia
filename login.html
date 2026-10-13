@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Área do Cliente - Barbearia Premium</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body style="background-color: #f8f9fa;">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg custom-navbar py-3">
+        <div class="container">
+            <a class="navbar-brand text-white d-flex align-items-center fw-bold" href="index.html">
+                <i class="fa-solid fa-scissors me-2"></i> Barbearia Premium
+            </a>
+            <button class="navbar-toggler bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link text-light" href="index.html">Início</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-light" href="sobre.html">Sobre</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-light" href="servicos.html">Serviços</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-light" href="contato.html">Contato</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link custom-active nav-link-conta" href="login.html">Minha Conta</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="d-none d-lg-block">
+                <a href="agendamento.html" class="btn custom-btn-nav">Agendar</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Container Principal de Autenticação e Painel -->
+    <div id="auth-container" class="container py-5">
+        
+        <!-- 1. VISÃO DE VISITANTE (LOGIN / REGISTRO) -->
+        <div id="auth-guest-view" class="row justify-content-center">
+            <div class="col-12 col-md-8 col-lg-5">
+                <div class="card p-4 p-md-5 border-0 shadow rounded-4" style="background-color: #1a1a1a; color: white;">
+                    <div class="text-center mb-4">
+                        <div class="feature-icon-wrapper mx-auto mb-3" style="width: 50px; height: 50px;">
+                            <i class="fa-solid fa-user-lock"></i>
+                        </div>
+                        <h4 class="fw-bold mb-1 text-white">Área do Cliente</h4>
+                        <p class="text-muted small">Faça login com seu telefone para ver seus horários</p>
+                    </div>
+
+                    <!-- Abas de navegação (Login vs Cadastro) -->
+                    <ul class="nav nav-pills auth-nav-pills justify-content-center mb-4 gap-2" id="authTabs" role="tablist">
+                        <li class="nav-item flex-fill text-center" role="presentation">
+                            <button class="nav-link active w-100" id="tab-login-btn" data-bs-toggle="pill" data-bs-target="#tab-login" type="button" role="tab">Entrar</button>
+                        </li>
+                        <li class="nav-item flex-fill text-center" role="presentation">
+                            <button class="nav-link w-100" id="tab-reg-btn" data-bs-toggle="pill" data-bs-target="#tab-registro" type="button" role="tab">Cadastrar</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="authTabsContent">
+                        <!-- Formulário de Login -->
+                        <div class="tab-pane fade show active" id="tab-login" role="tabpanel">
+                            <div id="login-alert" class="alert alert-danger py-2 small d-none" role="alert"></div>
+
+                            <form id="form-login">
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold" style="color: #ccc;">
+                                        Telefone / WhatsApp <span class="text-warning">* (Obrigatório)</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-dark border-secondary text-light"><i class="fa-solid fa-phone"></i></span>
+                                        <input type="tel" class="form-control form-control-dark" id="login-telefone" placeholder="(11) 90000-0000" required>
+                                    </div>
+                                    <small class="text-muted" style="font-size: 0.75rem;">Digite o telefone cadastrado com DDD.</small>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label small fw-bold" style="color: #ccc;">Senha</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-dark border-secondary text-light"><i class="fa-solid fa-lock"></i></span>
+                                        <input type="password" class="form-control form-control-dark" id="login-senha" placeholder="Sua senha" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn w-100 fw-bold py-2 custom-btn-nav" style="border: none;">Entrar</button>
+                            </form>
+                        </div>
+
+                        <!-- Formulário de Registro -->
+                        <div class="tab-pane fade" id="tab-registro" role="tabpanel">
+                            <div id="reg-alert" class="alert alert-danger py-2 small d-none" role="alert"></div>
+
+                            <form id="form-registro">
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold" style="color: #ccc;">Nome Completo</label>
+                                    <input type="text" class="form-control form-control-dark" id="reg-nome" placeholder="Seu nome" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold" style="color: #ccc;">
+                                        Telefone / WhatsApp <span class="text-warning">* (Obrigatório)</span>
+                                    </label>
+                                    <input type="tel" class="form-control form-control-dark" id="reg-telefone" placeholder="(11) 90000-0000" required>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label small fw-bold" style="color: #ccc;">Criar Senha</label>
+                                    <input type="password" class="form-control form-control-dark" id="reg-senha" placeholder="Mínimo 4 dígitos" required>
+                                </div>
+                                <button type="submit" class="btn w-100 fw-bold py-2 custom-btn-nav" style="border: none;">Criar Minha Conta</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. VISÃO DE CLIENTE LOGADO (PAINEL & MEUS AGENDAMENTOS) -->
+        <div id="auth-logged-view" class="d-none">
+            <!-- Cabeçalho do Perfil -->
+            <div class="card p-4 border-0 shadow-sm rounded-4 mb-4" style="background-color: #1a1a1a; color: white;">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                    <div class="d-flex align-items-center">
+                        <div class="feature-icon-wrapper me-3" style="width: 55px; height: 55px; font-size: 1.3rem;">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold mb-1 text-white">Olá, <span id="perfil-nome">Cliente</span>!</h4>
+                            <p class="text-muted small mb-0">
+                                <i class="fa-solid fa-phone me-1 text-warning"></i> Telefone vinculado: <strong id="perfil-telefone" class="text-white"></strong>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="agendamento.html" class="btn custom-btn-nav d-flex align-items-center">
+                            <i class="fa-solid fa-plus me-2"></i>Novo Agendamento
+                        </a>
+                        <button id="btn-logout" class="btn btn-outline-danger btn-sm px-3 fw-bold">
+                            <i class="fa-solid fa-right-from-bracket me-1"></i>Sair
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção de Agendamentos do Usuário -->
+            <div class="card p-4 p-md-5 border-0 shadow-sm rounded-4" style="background-color: #1a1a1a; color: white;">
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-secondary">
+                    <div>
+                        <h4 class="fw-bold text-white mb-1">Meus Agendamentos</h4>
+                        <p class="text-muted small mb-0">Agendamentos associados exclusivamente ao seu número de telefone</p>
+                    </div>
+                    <span id="agendamentos-count" class="badge bg-secondary px-3 py-2">0 agendamentos</span>
+                </div>
+
+                <!-- Lista dinâmica de agendamentos -->
+                <div id="lista-agendamentos">
+                    <!-- Gerado via JavaScript -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bootstrap JS e Módulo de Storage/Autenticação -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="storage.js"></script>
+</body>
+</html>
