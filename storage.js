@@ -318,9 +318,9 @@ function renderizarAgendamentosUsuario(telefoneRaw) {
     if (lista.length === 0) {
         container.innerHTML = `
             <div class="text-center py-5">
-                <i class="fa-regular fa-calendar-xmark text-muted fa-3x mb-3"></i>
+                <i class="fa-regular fa-calendar-xmark fa-3x mb-3" style="color: #666;"></i>
                 <h6 class="text-white fw-bold mb-1">Nenhum agendamento encontrado</h6>
-                <p class="text-muted small mb-4">Você ainda não tem nenhum horário agendado com este número de telefone.</p>
+                <p class="small mb-4" style="color: #bbb;">Você ainda não tem nenhum horário agendado com este número de telefone.</p>
                 <a href="agendamento.html" class="btn custom-btn-hero btn-sm">Agendar um Horário Agora</a>
             </div>
         `;
@@ -333,13 +333,13 @@ function renderizarAgendamentosUsuario(telefoneRaw) {
                 <div>
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <span class="badge" style="background-color: #ff9800; color: #111;">${item.servico}</span>
-                        <small class="text-muted">${item.horario}</small>
+                        <small style="color: #bbb;">${item.horario}</small>
                     </div>
                     <h5 class="text-white fw-bold mb-1">
                         <i class="fa-regular fa-calendar-check text-warning me-2"></i>${item.data}
                     </h5>
-                    <p class="text-muted small mb-3">
-                        <i class="fa-solid fa-phone me-1"></i> ${item.telefone}
+                    <p class="small mb-3" style="color: #ccc;">
+                        <i class="fa-solid fa-phone me-1 text-warning"></i> ${item.telefone}
                     </p>
                 </div>
                 <div class="pt-2 border-top border-secondary d-flex justify-content-between align-items-center">
