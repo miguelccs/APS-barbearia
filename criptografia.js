@@ -1,13 +1,13 @@
 // ========================================================
-// MÓDULO EXCLUSIVO: CRIPTOGRAFIA PARA LOCALSTORAGE
-// Padrão: AES-GCM (256-bit) nativo via Web Crypto API
-// Zero dependências externas
+// SCRIPT NOVO: CRIPTOGRAFIA
+// Padrão usado: AES-GCM (256-bit) nativo via Web Crypto API
 // ========================================================
 
 const CriptoStorage = (function () {
     const CHAVE_PADRAO = "barbearia-premium-secret-key-2026";
 
-    // 1. Converte ArrayBuffer para Base64 compacto
+    // UTILITÁRIO: Converte ArrayBuffer para Base64 compacto
+    // Serve para: Converter dados binários para texto que possa ser armazenado no localStorage
     function bufferParaBase64(buffer) {
         const bytes = new Uint8Array(buffer);
         let binary = '';
@@ -17,7 +17,8 @@ const CriptoStorage = (function () {
         return btoa(binary);
     }
 
-    // 2. Converte Base64 para Uint8Array
+    // UTILITÁRIO: Converte Base64 para Uint8Array
+    // Serve para: Converter texto Base64 em dados binários que podem ser descriptografados
     function base64ParaBuffer(base64) {
         const binary = atob(base64);
         const bytes = new Uint8Array(binary.length);
@@ -27,7 +28,9 @@ const CriptoStorage = (function () {
         return bytes;
     }
 
-    // 3. Deriva CryptoKey AES-GCM (256 bits) usando SHA-256 do segredo
+    // UTILITÁRIO: Deriva CryptoKey AES-GCM (256 bits) usando SHA-256 do segredo
+    // Serve para: Gerar a chave de criptografia/descriptografia
+    // AES exige chave binária de ESTRITAMENTE 256 bits (32 bytes)
     async function obterChave(segredo) {
         const enc = new TextEncoder();
         const hash = await crypto.subtle.digest("SHA-256", enc.encode(segredo));
@@ -41,16 +44,16 @@ const CriptoStorage = (function () {
     }
 
     return {
-        /**
-         * Criptografa objeto, array ou string com AES-GCM
-         * Retorna string compacta no formato: "IV_BASE64.DADO_CIFRADO_BASE64"
-         */
+        // Criptografa objeto, array ou string com AES-GCM
+        // Retorna string compacta no formato: "IV_BASE64.DADO_CIFRADO_BASE64"
         async cifrar(dado, segredo = CHAVE_PADRAO) {
             try {
                 const enc = new TextEncoder();
                 const textoLimpo = typeof dado === 'string' ? dado : JSON.stringify(dado);
 
                 // IV único de 12 bytes por operação
+                // O IV é obrigatório porque o AES-GCM é um algoritmo de criptografia simétrica
+                // O IV garante que mesmo com a mesma chave, cada operação de criptografia produza um resultado diferente
                 const iv = crypto.getRandomValues(new Uint8Array(12));
                 const chave = await obterChave(segredo);
 
@@ -67,10 +70,8 @@ const CriptoStorage = (function () {
             }
         },
 
-        /**
-         * Descriptografa e converte de volta para objeto/string
-         * Possui fallback transparente para dados legados não criptografados
-         */
+        // Descriptografa e converte de volta para objeto/string
+        // Possui fallback transparente para dados legados não criptografados (de preferência não é para cair nele)
         async decifrar(payloadCifrado, segredo = CHAVE_PADRAO) {
             try {
                 if (!payloadCifrado || typeof payloadCifrado !== 'string') {
@@ -105,7 +106,7 @@ const CriptoStorage = (function () {
                     return textoOriginal;
                 }
             } catch (err) {
-                // Fallback gracioso caso seja JSON não criptografado antigo
+                // Fallback gracioso caso seja JSON não criptografado antigo (feito para testar sem limpar cache)
                 try {
                     return JSON.parse(payloadCifrado);
                 } catch {

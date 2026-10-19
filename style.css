@@ -202,7 +202,6 @@ body {
     border-color: #ff9800;
 }
 
-/* Correção de contraste e legibilidade em fundos escuros */
 [style*="#1a1a1a"] .text-muted,
 .appointment-item .text-muted {
     color: #bbb !important;

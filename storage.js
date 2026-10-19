@@ -1,6 +1,6 @@
 // ==========================================
-// MÓDULO EXCLUSIVO: STORAGE & AUTENTICAÇÃO
-// Gerencia persistência cifrada (AES-GCM) no localStorage e lógica de usuários
+// SCRIPT NOVO: LOCAL STORAGE E LOGIN
+// Basicamente um script para guardar e puxar os agendamentos e logins do localStorage
 // ==========================================
 
 const Storage = {
@@ -9,13 +9,13 @@ const Storage = {
             const item = localStorage.getItem(key);
             if (!item) return defaultValue;
 
-            // Se o módulo CriptoStorage estiver presente, decifra os dados
+            // Usa o módulo CriptoStorage para decifrar os dados
             if (typeof CriptoStorage !== 'undefined') {
                 const decifrado = await CriptoStorage.decifrar(item);
                 if (decifrado !== null) return decifrado;
             }
 
-            // Fallback para dados em texto puro (legados)
+            // Fallback para não ficar sem nada
             return JSON.parse(item);
         } catch (err) {
             console.error(`[Storage] Falha ao ler "${key}":`, err);
@@ -25,7 +25,7 @@ const Storage = {
 
     async set(key, value) {
         try {
-            // Se o módulo CriptoStorage estiver presente, salva cifrado com AES-GCM
+            // Usa o módulo CriptoStorage para salvar cifrado com AES-GCM
             if (typeof CriptoStorage !== 'undefined') {
                 const cifrado = await CriptoStorage.cifrar(value);
                 localStorage.setItem(key, cifrado);
@@ -49,9 +49,7 @@ const Storage = {
     }
 };
 
-// ==========================================
-// UTILITÁRIOS DE FORMATAÇÃO E MÁSCARA
-// ==========================================
+// UTILITÁRIOS DE FORMATAÇÃO DO TELEFONE
 function normalizarTelefone(tel) {
     return String(tel || '').replace(/\D/g, '');
 }
@@ -81,9 +79,7 @@ function aplicarMascaraTelefone(input) {
     });
 }
 
-// ==========================================
-// SERVIÇO DE AUTENTICAÇÃO
-// ==========================================
+// AUTENTICAÇÃO DO USUÁRIO
 const Auth = {
     STORAGE_USERS: 'barbearia_usuarios',
     STORAGE_SESSION: 'barbearia_sessao',
@@ -168,9 +164,7 @@ const Auth = {
     }
 };
 
-// ==========================================
-// SERVIÇO DE AGENDAMENTOS
-// ==========================================
+// AGENDAMENTOS
 const Agendamentos = {
     STORAGE_KEY: 'barbearia_agendamentos',
 
@@ -211,9 +205,9 @@ const Agendamentos = {
     }
 };
 
-// ==========================================
-// GERENCIADOR DE UI DA ÁREA DE LOGIN E NAVBAR
-// ==========================================
+// GERENCIADOR DA TELA DE LOGIN
+// Serve para mudar a UI na tela (usuário logado? Tela 1, se não, Tela 2), 
+// Além de trocar o "Login" na Navbar para "Olá, {nome}" para usuários logados
 async function atualizarNavbar() {
     const usuario = await Auth.getUsuarioLogado();
     const linkConta = document.querySelector('.nav-link-conta');

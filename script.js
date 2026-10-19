@@ -1,6 +1,7 @@
 // ==========================================
-// SCRIPT DE AGENDAMENTO E CALENDÁRIO
-// Mantém as regras de datas, slots e interface de agendamento
+// SCRIPT DA V1
+// Tem as regras de negócio para as datas e da interface de agendamento
+// Já existia na versão 1 da APS entregada no bimestre passado
 // ==========================================
 
 let currentDate = new Date();
