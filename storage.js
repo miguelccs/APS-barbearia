@@ -68,7 +68,11 @@ function formatarTelefone(tel) {
 function aplicarMascaraTelefone(input) {
     if (!input) return;
     input.addEventListener('input', (e) => {
-        let v = e.target.value.replace(/\D/g, '').slice(0, 11);
+        const val = e.target.value;
+        if (val.toLowerCase().startsWith('admin') || 'admin'.startsWith(val.toLowerCase())) {
+            return;
+        }
+        let v = val.replace(/\D/g, '').slice(0, 11);
         if (v.length > 6) {
             e.target.value = `(${v.slice(0, 2)}) ${v.slice(2, 7)}-${v.slice(7)}`;
         } else if (v.length > 2) {
@@ -131,14 +135,32 @@ const Auth = {
         return { ok: true, usuario: sessao };
     },
 
-    async login(telefone, senha) {
-        const telLimpo = normalizarTelefone(telefone);
+    async login(identificador, senha) {
+        const termo = String(identificador || '').trim();
 
-        if (!telLimpo) {
-            return { ok: false, mensagem: 'O telefone é obrigatório para realizar o login.' };
+        if (!termo) {
+            return { ok: false, mensagem: 'Informe seu telefone ou usuário para realizar o login.' };
         }
         if (!senha) {
             return { ok: false, mensagem: 'Por favor, informe sua senha.' };
+        }
+
+        // Login padrão de Adm
+        if (termo.toLowerCase() === 'admin' && senha === 'admin') {
+            const sessaoAdmin = {
+                id: 'usr_admin',
+                nome: 'Administrador',
+                telefone: 'admin',
+                telefoneRaw: 'admin',
+                isAdmin: true
+            };
+            await Storage.set(this.STORAGE_SESSION, sessaoAdmin);
+            return { ok: true, usuario: sessaoAdmin };
+        }
+
+        const telLimpo = normalizarTelefone(termo);
+        if (!telLimpo) {
+            return { ok: false, mensagem: 'Telefone ou usuário inválido. Verifique os dados.' };
         }
 
         const usuarios = await Storage.get(this.STORAGE_USERS, []);
@@ -152,7 +174,8 @@ const Auth = {
             id: usuario.id,
             nome: usuario.nome,
             telefone: usuario.telefone,
-            telefoneRaw: usuario.telefoneRaw
+            telefoneRaw: usuario.telefoneRaw,
+            isAdmin: false
         };
         await Storage.set(this.STORAGE_SESSION, sessao);
 
@@ -397,7 +420,9 @@ async function renderizarEstadoAuth() {
         const perfilNome = document.getElementById('perfil-nome');
         const perfilTelefone = document.getElementById('perfil-telefone');
         if (perfilNome) perfilNome.textContent = usuario.nome;
-        if (perfilTelefone) perfilTelefone.textContent = usuario.telefone;
+        if (perfilTelefone) {
+            perfilTelefone.textContent = usuario.isAdmin ? 'Acesso Administrativo (Geral)' : usuario.telefone;
+        }
 
         const btnLogout = document.getElementById('btn-logout');
         if (btnLogout) {
@@ -410,22 +435,39 @@ async function renderizarEstadoAuth() {
             };
         }
 
-        await renderizarAgendamentosUsuario(usuario.telefoneRaw);
+        await renderizarAgendamentosUsuario(usuario);
     } else {
         loggedView.classList.add('d-none');
         guestView.classList.remove('d-none');
     }
 }
 
-async function renderizarAgendamentosUsuario(telefoneRaw) {
+async function renderizarAgendamentosUsuario(usuario) {
     const container = document.getElementById('lista-agendamentos');
     const countBadge = document.getElementById('agendamentos-count');
+    const tituloSection = document.getElementById('agendamentos-titulo');
+    const descSection = document.getElementById('agendamentos-desc');
     if (!container) return;
 
-    const lista = await Agendamentos.listarPorTelefone(telefoneRaw);
+    const isAdmin = Boolean(usuario && usuario.isAdmin);
+    const lista = isAdmin
+        ? await Agendamentos.listarTodos()
+        : await Agendamentos.listarPorTelefone(usuario ? usuario.telefoneRaw : '');
+
+    if (tituloSection) {
+        tituloSection.innerHTML = isAdmin
+            ? '<i class="fa-solid fa-shield-halved text-warning me-2"></i>Todos os Agendamentos (Admin)'
+            : 'Meus Agendamentos';
+    }
+    if (descSection) {
+        descSection.textContent = isAdmin
+            ? 'Acesso de administrador: exibindo todos os agendamentos registrados no sistema com nome e telefone.'
+            : 'Agendamentos associados exclusivamente ao seu número de telefone';
+    }
 
     if (countBadge) {
-        countBadge.textContent = `${lista.length} ${lista.length === 1 ? 'agendamento' : 'agendamentos'}`;
+        countBadge.textContent = `${lista.length} ${lista.length === 1 ? 'agendamento' : 'agendamentos'}${isAdmin ? ' (Total)' : ''}`;
+        countBadge.className = isAdmin ? 'badge bg-warning text-dark px-3 py-2 fw-bold' : 'badge bg-secondary px-3 py-2';
     }
 
     if (lista.length === 0) {
@@ -433,7 +475,7 @@ async function renderizarAgendamentosUsuario(telefoneRaw) {
             <div class="text-center py-5">
                 <i class="fa-regular fa-calendar-xmark fa-3x mb-3" style="color: #666;"></i>
                 <h6 class="text-white fw-bold mb-1">Nenhum agendamento encontrado</h6>
-                <p class="small mb-4" style="color: #bbb;">Você ainda não tem nenhum horário agendado com este número de telefone.</p>
+                <p class="small mb-4" style="color: #bbb;">${isAdmin ? 'Não há nenhum agendamento registrado no sistema no momento.' : 'Você ainda não tem nenhum horário agendado com este número de telefone.'}</p>
                 <a href="agendamento.html" class="btn custom-btn-hero btn-sm">Agendar um Horário Agora</a>
             </div>
         `;
@@ -446,18 +488,23 @@ async function renderizarAgendamentosUsuario(telefoneRaw) {
                 <div>
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <span class="badge" style="background-color: #ff9800; color: #111;">${item.servico}</span>
-                        <small style="color: #bbb;">${item.horario}</small>
+                        <small style="color: #bbb;"><i class="fa-regular fa-clock me-1 text-warning"></i>${item.horario}</small>
                     </div>
-                    <h5 class="text-white fw-bold mb-1">
+                    <h5 class="text-white fw-bold mb-2">
                         <i class="fa-regular fa-calendar-check text-warning me-2"></i>${item.data}
                     </h5>
-                    <p class="small mb-3" style="color: #ccc;">
-                        <i class="fa-solid fa-phone me-1 text-warning"></i> ${item.telefone}
-                    </p>
+                    <div class="p-2 rounded mb-3" style="background-color: #1a1a1a; border: 1px solid #333;">
+                        <p class="small mb-1 text-white">
+                            <i class="fa-solid fa-user me-2 text-warning"></i><strong>Cliente:</strong> ${item.nome || 'Não informado'}
+                        </p>
+                        <p class="small mb-0 text-white">
+                            <i class="fa-solid fa-phone me-2 text-warning"></i><strong>Telefone:</strong> ${item.telefone || 'Não informado'}
+                        </p>
+                    </div>
                 </div>
                 <div class="pt-2 border-top border-secondary d-flex justify-content-between align-items-center">
                     <span class="small text-success"><i class="fa-solid fa-circle-dot me-1"></i>Confirmado</span>
-                    <button class="btn btn-outline-danger btn-sm py-1 px-2" onclick="cancelarAgendamento('${item.id}', '${telefoneRaw}')">
+                    <button class="btn btn-outline-danger btn-sm py-1 px-2" onclick="cancelarAgendamento('${item.id}')">
                         <i class="fa-regular fa-trash-can me-1"></i>Cancelar
                     </button>
                 </div>
@@ -468,10 +515,11 @@ async function renderizarAgendamentosUsuario(telefoneRaw) {
     container.innerHTML = `<div class="row g-3">${cardsHtml}</div>`;
 }
 
-window.cancelarAgendamento = async function (id, telefoneRaw) {
+window.cancelarAgendamento = async function (id) {
     if (confirm('Tem certeza que deseja cancelar este agendamento?')) {
         await Agendamentos.cancelar(id);
-        await renderizarAgendamentosUsuario(telefoneRaw);
+        const usuario = await Auth.getUsuarioLogado();
+        await renderizarAgendamentosUsuario(usuario);
     }
 };
 

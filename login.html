@@ -71,13 +71,13 @@
                             <form id="form-login">
                                 <div class="mb-3">
                                     <label class="form-label small fw-bold" style="color: #ccc;">
-                                        Telefone / WhatsApp <span class="text-warning">* (Obrigatório)</span>
+                                        Telefone ou Usuário <span class="text-warning">* (Obrigatório)</span>
                                     </label>
                                     <div class="input-group">
-                                        <span class="input-group-text bg-dark border-secondary text-light"><i class="fa-solid fa-phone"></i></span>
-                                        <input type="tel" class="form-control form-control-dark" id="login-telefone" placeholder="(11) 90000-0000" required>
+                                        <span class="input-group-text bg-dark border-secondary text-light"><i class="fa-solid fa-user"></i></span>
+                                        <input type="text" class="form-control form-control-dark" id="login-telefone" placeholder="(11) 90000-0000 ou admin" required>
                                     </div>
-                                    <small class="d-block mt-1" style="color: #aaa; font-size: 0.75rem;">Digite o telefone cadastrado com DDD.</small>
+                                    <small class="d-block mt-1" style="color: #aaa; font-size: 0.75rem;">Digite seu telefone cadastrado ou "admin".</small>
                                 </div>
                                 <div class="mb-4">
                                     <label class="form-label small fw-bold" style="color: #ccc;">Senha</label>
@@ -144,8 +144,8 @@
             <div class="card p-4 p-md-5 border-0 shadow-sm rounded-4" style="background-color: #1a1a1a; color: white;">
                 <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-secondary">
                     <div>
-                        <h4 class="fw-bold text-white mb-1">Meus Agendamentos</h4>
-                        <p class="small mb-0" style="color: #ccc;">Agendamentos associados exclusivamente ao seu número de telefone</p>
+                        <h4 class="fw-bold text-white mb-1" id="agendamentos-titulo">Meus Agendamentos</h4>
+                        <p class="small mb-0" id="agendamentos-desc" style="color: #ccc;">Agendamentos associados exclusivamente ao seu número de telefone</p>
                     </div>
                     <span id="agendamentos-count" class="badge bg-secondary px-3 py-2">0 agendamentos</span>
                 </div>

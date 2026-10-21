@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const nomeInput = document.getElementById('nome');
                     const telInput = document.getElementById('telefone');
                     if (nomeInput && !nomeInput.value) nomeInput.value = usuarioLogado.nome;
-                    if (telInput && !telInput.value) telInput.value = usuarioLogado.telefone;
+                    if (telInput && !telInput.value && !usuarioLogado.isAdmin) telInput.value = usuarioLogado.telefone;
 
                     const formEl = document.getElementById('agendamento-form');
                     if (formEl && !document.getElementById('badge-user-logged')) {
@@ -45,8 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         badge.id = 'badge-user-logged';
                         badge.className = 'alert alert-dark border-secondary py-2 px-3 mb-3 small d-flex justify-content-between align-items-center';
                         badge.innerHTML = `
-                            <span><i class="fa-solid fa-circle-check text-warning me-2"></i>Logado como <strong>${usuarioLogado.nome}</strong></span>
-                            <a href="login.html" class="text-warning text-decoration-none fw-bold">Ver Meus Agendamentos</a>
+                            <span><i class="fa-solid ${usuarioLogado.isAdmin ? 'fa-shield-halved' : 'fa-circle-check'} text-warning me-2"></i>Logado como <strong>${usuarioLogado.nome}${usuarioLogado.isAdmin ? ' (Admin)' : ''}</strong></span>
+                            <a href="login.html" class="text-warning text-decoration-none fw-bold">${usuarioLogado.isAdmin ? 'Ver Todos os Agendamentos' : 'Ver Meus Agendamentos'}</a>
                         `;
                         formEl.prepend(badge);
                     }
@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             const nomeInput = document.getElementById('nome');
                             const telInput = document.getElementById('telefone');
                             if (nomeInput) nomeInput.value = usuarioLogado.nome;
-                            if (telInput) telInput.value = usuarioLogado.telefone;
+                            if (telInput && !usuarioLogado.isAdmin) telInput.value = usuarioLogado.telefone;
                         }
                     });
                 }
