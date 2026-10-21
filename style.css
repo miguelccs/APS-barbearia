@@ -159,6 +159,42 @@ body {
     border-color: #ff9800;
 }
 
+.time-slot.ocupado {
+    background-color: #212529;
+    color: #777;
+    border-color: #1a1a1a;
+    cursor: not-allowed;
+    user-select: none;
+    opacity: 0.85;
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.4);
+}
+
+.time-slot.ocupado:hover {
+    background-color: #212529;
+    border-color: #1a1a1a;
+    color: #777;
+}
+
+/* Legenda de Horários */
+.legend-badge {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    vertical-align: middle;
+}
+.legend-badge.available {
+    background-color: #fff;
+    border: 1px solid #ccc;
+}
+.legend-badge.selected {
+    background-color: #ff9800;
+}
+.legend-badge.taken {
+    background-color: #212529;
+    border: 1px solid #111;
+}
+
 .form-control-dark,
 .form-control-dark:focus {
     background-color: #2a2a2a;

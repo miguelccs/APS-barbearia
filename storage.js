@@ -194,14 +194,117 @@ const Agendamentos = {
 
         todos.push(novo);
         await Storage.set(this.STORAGE_KEY, todos);
+
+        if (typeof HorariosAssinados !== 'undefined') {
+            await HorariosAssinados.assinar(novo.data, novo.horario);
+        }
+
         return novo;
     },
 
     async cancelar(id) {
         const todos = await this.listarTodos();
+        const itemCancelado = todos.find(item => item.id === id);
         const filtrados = todos.filter(item => item.id !== id);
         await Storage.set(this.STORAGE_KEY, filtrados);
+
+        if (itemCancelado && typeof HorariosAssinados !== 'undefined') {
+            await HorariosAssinados.liberar(itemCancelado.data, itemCancelado.horario);
+        }
+
         return true;
+    }
+};
+
+// HORÁRIOS ASSINADOS / OCUPADOS
+const HorariosAssinados = {
+    STORAGE_KEY: 'barbearia_horarios_assinados',
+
+    // Retorna todos os horários assinados [{ data: 'DD/MM/AAAA', horario: 'HH:MM' }]
+    async listarTodos() {
+        let lista = await Storage.get(this.STORAGE_KEY, null);
+
+        if (lista === null) {
+            lista = await this._inicializarPadrao();
+        }
+        return Array.isArray(lista) ? lista : [];
+    },
+
+    async listarPorData(data) {
+        const todos = await this.listarTodos();
+        return todos
+            .filter(item => item.data === data)
+            .map(item => item.horario);
+    },
+
+    async isOcupado(data, horario) {
+        const ocupadosNaData = await this.listarPorData(data);
+        return ocupadosNaData.includes(horario);
+    },
+
+    // Assina/reserva um novo horário e salva criptografado no localStorage
+    async assinar(data, horario) {
+        if (!data || !horario) return false;
+        const todos = await this.listarTodos();
+        const jaExiste = todos.some(item => item.data === data && item.horario === horario);
+
+        if (!jaExiste) {
+            todos.push({
+                data,
+                horario,
+                assinadoEm: new Date().toISOString()
+            });
+            await Storage.set(this.STORAGE_KEY, todos);
+        }
+        return true;
+    },
+
+    // Libera um horário (usado em cancelamentos)
+    async liberar(data, horario) {
+        const todos = await this.listarTodos();
+        const filtrados = todos.filter(item => !(item.data === data && item.horario === horario));
+        await Storage.set(this.STORAGE_KEY, filtrados);
+        return true;
+    },
+
+    // Dados iniciais para visualização imediata nos testes
+    async _inicializarPadrao() {
+        const padrao = [];
+        const hoje = new Date();
+
+        // Popula exemplos para hoje e os próximos 2 dias
+        for (let i = 0; i < 3; i++) {
+            const d = new Date(hoje);
+            d.setDate(hoje.getDate() + i);
+            const dia = String(d.getDate()).padStart(2, '0');
+            const mes = String(d.getMonth() + 1).padStart(2, '0');
+            const ano = d.getFullYear();
+            const dataStr = `${dia}/${mes}/${ano}`;
+
+            if (i === 0) {
+                padrao.push({ data: dataStr, horario: '10:20', assinadoEm: new Date().toISOString() });
+                padrao.push({ data: dataStr, horario: '14:20', assinadoEm: new Date().toISOString() });
+                padrao.push({ data: dataStr, horario: '17:40', assinadoEm: new Date().toISOString() });
+            } else if (i === 1) {
+                padrao.push({ data: dataStr, horario: '09:00', assinadoEm: new Date().toISOString() });
+                padrao.push({ data: dataStr, horario: '15:40', assinadoEm: new Date().toISOString() });
+            } else {
+                padrao.push({ data: dataStr, horario: '11:00', assinadoEm: new Date().toISOString() });
+            }
+        }
+
+        // Sincroniza com agendamentos já existentes, se houver
+        const agendamentosExistentes = await Storage.get('barbearia_agendamentos', []);
+        if (Array.isArray(agendamentosExistentes)) {
+            agendamentosExistentes.forEach(ag => {
+                if (ag.data && ag.horario && !padrao.some(p => p.data === ag.data && p.horario === ag.horario)) {
+                    padrao.push({ data: ag.data, horario: ag.horario, assinadoEm: ag.criadoEm || new Date().toISOString() });
+                }
+            });
+        }
+
+        await Storage.set(this.STORAGE_KEY, padrao);
+        return padrao;
     }
 };
 
@@ -376,3 +479,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     await atualizarNavbar();
     inicializarPaginaLogin();
 });
+
+if (typeof window !== 'undefined') {
+    window.Storage = Storage;
+    window.Auth = Auth;
+    window.Agendamentos = Agendamentos;
+    window.HorariosAssinados = HorariosAssinados;
+}
+

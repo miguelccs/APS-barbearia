@@ -83,9 +83,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const nome = document.getElementById('nome').value;
                 const telefone = document.getElementById('telefone') ? document.getElementById('telefone').value : '';
-                const servico = document.getElementById('servico-select').value;
                 const dataFormatada = formatDate(selectedDate);
                 
+                // Validação de segurança: verifica se horário já foi assinado no localStorage
+                if (typeof HorariosAssinados !== 'undefined') {
+                    const ocupado = await HorariosAssinados.isOcupado(dataFormatada, selectedTime);
+                    if (ocupado) {
+                        alert('Este horário já está assinado/ocupado. Por favor, escolha outro.');
+                        await renderTimeSlots();
+                        return;
+                    }
+                }
+
                 // Persistência via módulo de storage (se disponível)
                 if (typeof Agendamentos !== 'undefined') {
                     await Agendamentos.salvar({
@@ -190,7 +199,7 @@ function renderCalendar(month, year) {
     }
 }
 
-function selectDate(year, month, day) {
+async function selectDate(year, month, day) {
     selectedDate = new Date(year, month, day);
     selectedTime = null;
     
@@ -199,12 +208,27 @@ function selectDate(year, month, day) {
     document.getElementById('no-date-selected').classList.add('d-none');
     document.getElementById('time-slots-container').classList.remove('d-none');
     
-    renderTimeSlots();
+    await renderTimeSlots();
     updateSelectionDisplay();
 }
 
-function renderTimeSlots() {
+async function renderTimeSlots() {
     const container = document.getElementById('time-slots');
+    if (!container || !selectedDate) return;
+    
+    const targetDate = selectedDate;
+    const dataFormatada = formatDate(targetDate);
+    
+    container.innerHTML = '<div class="col-12 text-center text-muted small py-2"><i class="fa-solid fa-spinner fa-spin me-2"></i>Carregando horários...</div>';
+
+    const ocupadosList = (typeof HorariosAssinados !== 'undefined')
+        ? await HorariosAssinados.listarPorData(dataFormatada)
+        : [];
+    const ocupadosSet = new Set(ocupadosList);
+
+    // Evita renderizar caso a data tenha mudado durante a descriptografia
+    if (selectedDate !== targetDate) return;
+
     container.innerHTML = '';
     
     const timesToShow = availableTimes;
@@ -219,16 +243,24 @@ function renderTimeSlots() {
         slot.classList.add('time-slot');
         slot.textContent = time;
         
-        if (selectedTime === time) {
-            slot.classList.add('selected');
+        const isOcupado = ocupadosSet.has(time);
+
+        if (isOcupado) {
+            slot.classList.add('ocupado');
+            slot.setAttribute('aria-disabled', 'true');
+            slot.title = 'Horário indisponível (já assinado)';
+        } else {
+            if (selectedTime === time) {
+                slot.classList.add('selected');
+            }
+            
+            slot.addEventListener('click', () => {
+                document.querySelectorAll('.time-slot').forEach(el => el.classList.remove('selected'));
+                slot.classList.add('selected');
+                selectedTime = time;
+                updateSelectionDisplay();
+            });
         }
-        
-        slot.addEventListener('click', () => {
-            document.querySelectorAll('.time-slot').forEach(el => el.classList.remove('selected'));
-            slot.classList.add('selected');
-            selectedTime = time;
-            updateSelectionDisplay();
-        });
         
         container.appendChild(slot);
     });
