@@ -149,7 +149,7 @@ const Auth = {
         if (termo.toLowerCase() === 'admin' && senha === 'admin') {
             const sessaoAdmin = {
                 id: 'usr_admin',
-                nome: 'Administrador',
+                nome: 'Amorin',
                 telefone: 'admin',
                 telefoneRaw: 'admin',
                 isAdmin: true
